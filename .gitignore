@@ -216,3 +216,25 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ==========================
+# OMNeT++ Build Files
+# ==========================
+
+# Build output
+omnet/AQM_Bootcamp/out/
+
+# Simulation results
+omnet/AQM_Bootcamp/simulations/results/
+
+# Generated executables
+*.exe
+*.o
+*.obj
+*.a
+*.dll
+
+# Eclipse generated
+*.launch
+# Qtenv settings
+*.qtenvrc
