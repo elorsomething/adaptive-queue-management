@@ -16,15 +16,11 @@
 package aqm_bootcamp;
 
 //
-// TODO auto-generated type
+// TODO auto-generated module
 //
-network SimpleNetwork
+simple Queue
 {
-    submodules:
-        generator: Generator;
-        queue: Queue;
-        receiver: Receiver;
-    connections:
-        generator.out --> queue.in;
-        queue.out --> receiver.in;
+    gates:
+        input in;
+        output out;
 }
