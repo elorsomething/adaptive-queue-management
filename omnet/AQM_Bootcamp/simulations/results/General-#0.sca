@@ -1,8 +1,8 @@
 version 3
-run General-0-20260706-10:02:24-16824
+run General-0-20260707-21:57:41-18584
 attr configname General
-attr datetime 20260706-10:02:24
-attr datetimef 20260706-100224
+attr datetime 20260707-21:57:41
+attr datetimef 20260707-215741
 attr experiment General
 attr inifile omnetpp.ini
 attr iterationvars ""
@@ -10,7 +10,7 @@ attr iterationvarsd ""
 attr iterationvarsf ""
 attr measurement ""
 attr network aqm_bootcamp.SimpleNetwork
-attr processid 16824
+attr processid 18584
 attr repetition 0
 attr replication #0
 attr resultdir results

@@ -17,6 +17,7 @@
 #define __AQM_BOOTCAMP_QUEUE_H_
 
 #include <omnetpp.h>
+#include <queue>
 
 using namespace omnetpp;
 
@@ -28,6 +29,11 @@ class Queue : public cSimpleModule
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
+  private:
+    std::queue<cMessage*> buffer;
+    cMessage *endServiceEvent;
+    cMessage *currentPacket;
+    bool busy;
 };
 
 #endif

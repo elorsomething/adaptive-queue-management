@@ -19,15 +19,67 @@ Define_Module(Queue);
 
 void Queue::initialize()
 {
-    // TODO - Generated method body
+       busy = false;
+       currentPacket = nullptr;
+       endServiceEvent = new cMessage("endService");
 }
 
 void Queue::handleMessage(cMessage *msg)
 {
-    EV << "Queue forwarding: "
-       << msg->getName()
-       << " at "
-       << simTime()
-       << endl;
-    send(msg, "out");
+    if (msg == endServiceEvent)
+        {
+            EV << "Finished service for "
+               << currentPacket->getName()
+               << " at "
+               << simTime()
+               << endl;
+
+            send(currentPacket, "out");
+
+            if (buffer.empty())
+            {
+                busy = false;
+                currentPacket = nullptr;
+            }
+            else
+            {
+                currentPacket = buffer.front();
+                buffer.pop();
+
+                EV << "Starting service for "
+                   << currentPacket->getName()
+                   << " at "
+                   << simTime()
+                   << endl;
+
+                scheduleAt(simTime() + 1, endServiceEvent);
+            }
+        }
+
+        // New packet arrived
+        else
+        {
+            if (!busy)
+            {
+                busy = true;
+                currentPacket = msg;
+
+                EV << "Starting service for "
+                   << currentPacket->getName()
+                   << " at "
+                   << simTime()
+                   << endl;
+
+                scheduleAt(simTime() + 1, endServiceEvent);
+            }
+            else
+            {
+                buffer.push(msg);
+
+                EV << msg->getName()
+                   << " queued. Queue length = "
+                   << buffer.size()
+                   << endl;
+            }
+        }
 }
