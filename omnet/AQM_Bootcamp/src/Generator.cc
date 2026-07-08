@@ -28,5 +28,5 @@ void Generator::handleMessage(cMessage *msg)
     EV << "Generator woke up at time: " << simTime() << endl;
     cMessage *packet = new cMessage("Packet");
     send(packet, "out");
-    scheduleAt(simTime() + 1, msg);
+    scheduleAt(simTime() + 0.3, msg);
 }

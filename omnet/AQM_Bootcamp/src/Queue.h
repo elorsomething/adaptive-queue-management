@@ -29,11 +29,16 @@ class Queue : public cSimpleModule
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
+    virtual void finish() override;
   private:
     std::queue<cMessage*> buffer;
     cMessage *endServiceEvent;
     cMessage *currentPacket;
     bool busy;
+    int maxQueueSize;
+    int packetsReceived;
+    int packetsDropped;
+    int packetsForwarded;
 };
 
 #endif

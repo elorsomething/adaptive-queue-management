@@ -19,9 +19,14 @@ Define_Module(Queue);
 
 void Queue::initialize()
 {
-       busy = false;
-       currentPacket = nullptr;
-       endServiceEvent = new cMessage("endService");
+
+        busy = false;
+        currentPacket = nullptr;
+        endServiceEvent = new cMessage("endService");
+        maxQueueSize = 10;
+        packetsReceived = 0;
+        packetsDropped = 0;
+        packetsForwarded = 0;
 }
 
 void Queue::handleMessage(cMessage *msg)
@@ -35,6 +40,7 @@ void Queue::handleMessage(cMessage *msg)
                << endl;
 
             send(currentPacket, "out");
+            packetsForwarded++;
 
             if (buffer.empty())
             {
@@ -59,6 +65,7 @@ void Queue::handleMessage(cMessage *msg)
         // New packet arrived
         else
         {
+            packetsReceived++;
             if (!busy)
             {
                 busy = true;
@@ -74,12 +81,43 @@ void Queue::handleMessage(cMessage *msg)
             }
             else
             {
-                buffer.push(msg);
+                if (buffer.size() >= maxQueueSize)
+                {
+                    EV << "Packet dropped. Queue full!" << endl;
 
-                EV << msg->getName()
-                   << " queued. Queue length = "
-                   << buffer.size()
-                   << endl;
+                    delete msg;
+                    packetsDropped++;
+                }
+                else
+                {
+                    buffer.push(msg);
+
+                    EV << msg->getName()
+                    << " queued. Queue length = "
+                    << buffer.size()
+                    << endl;
+                }
+
+
             }
-        }
 }
+}
+void Queue::finish()
+{
+    EV << endl;
+    EV << "----- Queue Statistics -----" << endl;
+    EV << "Packets Received : " << packetsReceived << endl;
+    EV << "Packets Forwarded: " << packetsForwarded << endl;
+    EV << "Packets Dropped  : " << packetsDropped << endl;
+    EV << "Final Queue Size : " << buffer.size() << endl;
+    EV << "----------------------------" << endl;
+
+    double pdr = (double)packetsForwarded / packetsReceived;
+    double dropRate = (double)packetsDropped / packetsReceived;
+    double throughput = (double)packetsForwarded / simTime().dbl();
+
+    EV << "Packet Delivery Ratio : " << pdr << endl;
+    EV << "Drop Rate             : " << dropRate << endl;
+    EV << "Throughput            : " << throughput << " packets/sec" << endl;
+}
+
