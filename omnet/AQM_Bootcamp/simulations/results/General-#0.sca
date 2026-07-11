@@ -1,8 +1,8 @@
 version 3
-run General-0-20260708-21:54:32-2984
+run General-0-20260710-21:24:34-24292
 attr configname General
-attr datetime 20260708-21:54:32
-attr datetimef 20260708-215432
+attr datetime 20260710-21:24:34
+attr datetimef 20260710-212434
 attr experiment General
 attr inifile omnetpp.ini
 attr iterationvars ""
@@ -10,7 +10,7 @@ attr iterationvarsd ""
 attr iterationvarsf ""
 attr measurement ""
 attr network aqm_bootcamp.SimpleNetwork
-attr processid 2984
+attr processid 24292
 attr repetition 0
 attr replication #0
 attr resultdir results
@@ -18,9 +18,15 @@ attr runnumber 0
 attr seedset 0
 config network aqm_bootcamp.SimpleNetwork
 config sim-time-limit 10s
+config *.queue.maxQueueSize 10
+config *.queue.minThreshold 6
+config *.queue.maxThreshold 9
 
 par SimpleNetwork.generator typename "\"aqm_bootcamp.Generator\""
 par SimpleNetwork.queue typename "\"aqm_bootcamp.Queue\""
+par SimpleNetwork.queue maxQueueSize 10
+par SimpleNetwork.queue minThreshold 6
+par SimpleNetwork.queue maxThreshold 9
 par SimpleNetwork.receiver typename "\"aqm_bootcamp.Receiver\""
 par SimpleNetwork typename "\"aqm_bootcamp.SimpleNetwork\""
 

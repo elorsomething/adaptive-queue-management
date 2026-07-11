@@ -18,6 +18,7 @@
 
 #include <omnetpp.h>
 #include <queue>
+#include <fstream>
 
 using namespace omnetpp;
 
@@ -30,15 +31,22 @@ class Queue : public cSimpleModule
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void finish() override;
+    double calculateDropProbability();
+    void logMetrics(double dropProbability, double randomNumber, bool packetDropped);
   private:
     std::queue<cMessage*> buffer;
+    std::ofstream csvFile;
     cMessage *endServiceEvent;
     cMessage *currentPacket;
     bool busy;
     int maxQueueSize;
+    int minThreshold;
+    int maxThreshold;
     int packetsReceived;
     int packetsDropped;
     int packetsForwarded;
+
+
 };
 
 #endif

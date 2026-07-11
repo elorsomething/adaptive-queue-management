@@ -23,10 +23,26 @@ void Queue::initialize()
         busy = false;
         currentPacket = nullptr;
         endServiceEvent = new cMessage("endService");
-        maxQueueSize = 10;
+        maxQueueSize = par("maxQueueSize");
+        minThreshold = par("minThreshold");
+        maxThreshold = par("maxThreshold");
         packetsReceived = 0;
         packetsDropped = 0;
         packetsForwarded = 0;
+        csvFile.open("results/queue_metrics.csv");
+        if(!csvFile.is_open())
+            throw cRuntimeError("Cannot open CSV file.");
+
+        csvFile << "Time,"
+                << "QueueSize,"
+                << "QueueOccupancy,"
+                << "DropProbability,"
+                << "RandomNumber,"
+                << "PacketDropped,"
+                << "PacketsDropped,"
+                << "PacketsForwarded,"
+                << "PacketsReceived"
+                << endl;
 }
 
 void Queue::handleMessage(cMessage *msg)
@@ -42,15 +58,19 @@ void Queue::handleMessage(cMessage *msg)
             send(currentPacket, "out");
             packetsForwarded++;
 
+
+
             if (buffer.empty())
             {
                 busy = false;
                 currentPacket = nullptr;
+                logMetrics(calculateDropProbability(), -1 , false);
             }
             else
             {
                 currentPacket = buffer.front();
                 buffer.pop();
+                logMetrics(calculateDropProbability(), -1, false);
 
                 EV << "Starting service for "
                    << currentPacket->getName()
@@ -66,6 +86,7 @@ void Queue::handleMessage(cMessage *msg)
         else
         {
             packetsReceived++;
+            double r =-1;
             if (!busy)
             {
                 busy = true;
@@ -78,19 +99,52 @@ void Queue::handleMessage(cMessage *msg)
                    << endl;
 
                 scheduleAt(simTime() + 1, endServiceEvent);
+                logMetrics(calculateDropProbability(), -1, false);
             }
             else
             {
                 if (buffer.size() >= maxQueueSize)
                 {
                     EV << "Packet dropped. Queue full!" << endl;
-
-                    delete msg;
                     packetsDropped++;
+                    delete msg;
+
+                    logMetrics(calculateDropProbability(), -1, true);
                 }
                 else
                 {
-                    buffer.push(msg);
+                if (buffer.size() >= minThreshold)
+                {
+
+                    double dropProbability = calculateDropProbability();
+
+                    r = uniform(0.0,1.0);
+
+                    EV << "Queue = "
+                       << buffer.size()
+                       << "  Drop Probability = "
+                       << dropProbability
+                       << "Random = "
+                       << r
+                       << endl;
+
+                    if (r < dropProbability)
+                    {
+                        EV << "Early drop! Random = "
+                           << r << endl;
+                        packetsDropped++;
+                        logMetrics(dropProbability, r, true);
+                        delete msg;
+                        return;
+                    }
+                }
+
+
+
+
+
+                buffer.push(msg);
+                logMetrics(calculateDropProbability(), r, false);
 
                     EV << msg->getName()
                     << " queued. Queue length = "
@@ -100,8 +154,35 @@ void Queue::handleMessage(cMessage *msg)
 
 
             }
+        }
 }
+double Queue::calculateDropProbability()
+{
+    if (buffer.size() <= minThreshold)
+        return 0.0;
+
+    if (buffer.size() >= maxThreshold)
+        return 1.0;
+
+    return (double)(buffer.size() - minThreshold) /
+           (maxThreshold - minThreshold);
 }
+void Queue::logMetrics(double dropProbability, double randomNumber, bool packetDropped)
+{
+    double occupancy = (double)buffer.size() / maxQueueSize;
+    csvFile
+        << simTime() << ","
+        << buffer.size() << ","
+        << occupancy << ","
+        << dropProbability << ","
+        << randomNumber << ","
+        << packetDropped << ","
+        << packetsDropped << ","
+        << packetsForwarded << ","
+        << packetsReceived
+        << endl;
+}
+
 void Queue::finish()
 {
     EV << endl;
@@ -119,5 +200,6 @@ void Queue::finish()
     EV << "Packet Delivery Ratio : " << pdr << endl;
     EV << "Drop Rate             : " << dropRate << endl;
     EV << "Throughput            : " << throughput << " packets/sec" << endl;
+    csvFile.close();
 }
 

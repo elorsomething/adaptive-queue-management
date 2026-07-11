@@ -20,6 +20,10 @@ package aqm_bootcamp;
 //
 simple Queue
 {
+    parameters:
+        int maxQueueSize = default(10);
+        int minThreshold = default(6);
+        int maxThreshold = default(9);
     gates:
         input in;
         output out;
