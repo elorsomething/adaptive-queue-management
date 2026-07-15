@@ -20,6 +20,8 @@ package aqm_bootcamp;
 //
 simple Generator
 {
+    parameters:
+        double packetInterval = default(0.3);
     gates:
         output out;
 }

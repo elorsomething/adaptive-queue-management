@@ -28,6 +28,8 @@ class Generator : public cSimpleModule
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
+  private:
+    double packetInterval;
 };
 
 #endif
