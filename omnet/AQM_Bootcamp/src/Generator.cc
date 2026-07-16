@@ -20,9 +20,10 @@ Define_Module(Generator);
 void Generator::initialize()
 {
     packetInterval = par("packetInterval");
+    currentInterval = packetInterval;
     cMessage *timer = new cMessage("timer");
 
-    scheduleAt(simTime() + packetInterval, timer);
+    scheduleAt(simTime() + currentInterval, timer);
 }
 
 void Generator::handleMessage(cMessage *msg)
@@ -30,5 +31,19 @@ void Generator::handleMessage(cMessage *msg)
     EV << "Generator woke up at time: " << simTime() << endl;
     cMessage *packet = new cMessage("Packet");
     send(packet, "out");
-    scheduleAt(simTime() + packetInterval, msg);
+    if (simTime() < 20)
+        currentInterval = 0.80;
+
+    else if (simTime() < 40)
+        currentInterval = 0.15;
+
+    else if (simTime() < 60)
+        currentInterval = 0.60;
+
+    else if (simTime() < 80)
+        currentInterval = 0.20;
+
+    else
+        currentInterval = 0.80;
+    scheduleAt(simTime() + currentInterval, msg);
 }

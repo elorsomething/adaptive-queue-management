@@ -45,6 +45,8 @@ class Queue : public cSimpleModule
     int packetsReceived;
     int packetsDropped;
     int packetsForwarded;
+    double arrivalRate;
+    double serviceRate;
 
 
 };

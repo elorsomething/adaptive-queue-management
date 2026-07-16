@@ -30,6 +30,7 @@ class Generator : public cSimpleModule
     virtual void handleMessage(cMessage *msg) override;
   private:
     double packetInterval;
+    double currentInterval;
 };
 
 #endif

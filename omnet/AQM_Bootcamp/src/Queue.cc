@@ -41,7 +41,9 @@ void Queue::initialize()
                 << "PacketDropped,"
                 << "PacketsDropped,"
                 << "PacketsForwarded,"
-                << "PacketsReceived"
+                << "PacketsReceived,"
+                << "ArrivalRate,"
+                << "ServiceRate"
                 << endl;
 }
 
@@ -170,6 +172,17 @@ double Queue::calculateDropProbability()
 void Queue::logMetrics(double dropProbability, double randomNumber, bool packetDropped)
 {
     double occupancy = (double)buffer.size() / maxQueueSize;
+
+    if (simTime() > 0)
+    {
+        arrivalRate = (double)packetsReceived / simTime().dbl();
+        serviceRate = (double)packetsForwarded / simTime().dbl();
+    }
+    else
+    {
+        arrivalRate = 0;
+        serviceRate = 0;
+    }
     csvFile
         << simTime() << ","
         << buffer.size() << ","
@@ -179,7 +192,9 @@ void Queue::logMetrics(double dropProbability, double randomNumber, bool packetD
         << packetDropped << ","
         << packetsDropped << ","
         << packetsForwarded << ","
-        << packetsReceived
+        << packetsReceived << ","
+        << arrivalRate <<","
+        << serviceRate
         << endl;
 }
 
