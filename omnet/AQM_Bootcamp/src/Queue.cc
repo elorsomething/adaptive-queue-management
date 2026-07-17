@@ -14,6 +14,7 @@
 // 
 
 #include "Queue.h"
+#include <algorithm>
 
 Define_Module(Queue);
 
@@ -26,6 +27,7 @@ void Queue::initialize()
         maxQueueSize = par("maxQueueSize");
         minThreshold = par("minThreshold");
         maxThreshold = par("maxThreshold");
+        useML = par("useML");
         packetsReceived = 0;
         packetsDropped = 0;
         packetsForwarded = 0;
@@ -45,8 +47,63 @@ void Queue::initialize()
                 << "ArrivalRate,"
                 << "ServiceRate"
                 << endl;
-}
+        bool prediction = predictWithML(
+            8,
+            0.6,
+            0.5,
+            2.0,
+            1.8
+        );
 
+        EV << "ML prediction = " << prediction << endl;
+}
+bool Queue::predictWithML(
+    int queueSize,
+    double queueOccupancy,
+    double dropProbability,
+    double arrivalRate,
+    double serviceRate
+)
+{
+    std::stringstream command;
+
+    command
+        << "\"C:/Projects/OMNet_Bootcamp/adaptive-queue-management/omnet/AQM_Bootcamp/ml/run_predict.bat\" "
+        << queueSize << " "
+        << queueOccupancy << " "
+        << dropProbability << " "
+        << arrivalRate << " "
+        << serviceRate;
+
+    EV << "COMMAND = [" << command.str() << "]" << endl;
+
+    FILE *pipe = _popen(command.str().c_str(), "r");
+
+    if (!pipe)
+        throw cRuntimeError("Could not execute prediction.");
+
+    char buffer[128];
+    std::string result;
+
+    while (fgets(buffer, sizeof(buffer), pipe))
+        result += buffer;
+
+    _pclose(pipe);
+
+    EV << "Python returned: [" << result << "]" << endl;
+
+    result.erase(
+        std::remove(result.begin(), result.end(), '\n'),
+        result.end()
+    );
+
+    result.erase(
+        std::remove(result.begin(), result.end(), '\r'),
+        result.end()
+    );
+
+    return result == "1";
+}
 void Queue::handleMessage(cMessage *msg)
 {
     if (msg == endServiceEvent)
@@ -115,31 +172,70 @@ void Queue::handleMessage(cMessage *msg)
                 }
                 else
                 {
-                if (buffer.size() >= minThreshold)
-                {
-
-                    double dropProbability = calculateDropProbability();
-
-                    r = uniform(0.0,1.0);
-
-                    EV << "Queue = "
-                       << buffer.size()
-                       << "  Drop Probability = "
-                       << dropProbability
-                       << "Random = "
-                       << r
-                       << endl;
-
-                    if (r < dropProbability)
+                    if (buffer.size() >= minThreshold)
                     {
-                        EV << "Early drop! Random = "
-                           << r << endl;
-                        packetsDropped++;
-                        logMetrics(dropProbability, r, true);
-                        delete msg;
-                        return;
+                        double dropProbability = calculateDropProbability();
+
+                        if (useML)
+                        {
+                            bool mlDrop = predictWithML(
+                                buffer.size(),
+                                (double)buffer.size() / maxQueueSize,
+                                dropProbability,
+                                arrivalRate,
+                                serviceRate
+                            );
+
+                            EV << "ML Prediction = "
+                               << mlDrop << endl;
+
+                            if (mlDrop)
+                            {
+                                EV << "ML decided to drop packet!" << endl;
+
+                                packetsDropped++;
+
+                                logMetrics(
+                                    dropProbability,
+                                    -1,
+                                    true
+                                );
+
+                                delete msg;
+
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            r = uniform(0.0,1.0);
+
+                            EV << "Queue = "
+                               << buffer.size()
+                               << " Drop Probability = "
+                               << dropProbability
+                               << " Random = "
+                               << r
+                               << endl;
+
+                            if (r < dropProbability)
+                            {
+                                EV << "RED Early Drop!" << endl;
+
+                                packetsDropped++;
+
+                                logMetrics(
+                                    dropProbability,
+                                    r,
+                                    true
+                                );
+
+                                delete msg;
+
+                                return;
+                            }
+                        }
                     }
-                }
 
 
 

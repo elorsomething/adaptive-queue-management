@@ -19,6 +19,10 @@
 #include <omnetpp.h>
 #include <queue>
 #include <fstream>
+#include <cstdio>
+#include <array>
+#include <memory>
+#include <sstream>
 
 using namespace omnetpp;
 
@@ -32,6 +36,13 @@ class Queue : public cSimpleModule
     virtual void handleMessage(cMessage *msg) override;
     virtual void finish() override;
     double calculateDropProbability();
+    bool predictWithML(
+        int queueSize,
+        double queueOccupancy,
+        double dropProbability,
+        double arrivalRate,
+        double serviceRate
+    );
     void logMetrics(double dropProbability, double randomNumber, bool packetDropped);
   private:
     std::queue<cMessage*> buffer;
@@ -47,6 +58,7 @@ class Queue : public cSimpleModule
     int packetsForwarded;
     double arrivalRate;
     double serviceRate;
+    bool useML;
 
 
 };

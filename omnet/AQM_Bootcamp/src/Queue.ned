@@ -24,6 +24,7 @@ simple Queue
         int maxQueueSize = default(10);
         int minThreshold = default(6);
         int maxThreshold = default(9);
+        bool useML = default(false);
     gates:
         input in;
         output out;
